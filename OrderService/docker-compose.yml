@@ -1,0 +1,84 @@
+# version: '3.8'
+
+services:
+
+  # Web Server Service
+  order_nginx:
+    image: nginx:alpine
+    container_name: order_nginx
+    ports:
+      - "8084:80"
+    volumes:
+      - ./src:/var/www
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+    depends_on:
+      - order_app
+      - order_db
+    networks:
+      - ecommerce
+
+  #Database Service
+  order_db:
+    image : mysql
+    container_name : order_db
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_DATABASE: Order
+      MYSQL_ROOT_PASSWORD: password
+    networks:
+      - ecommerce
+  # db:
+  #   image: postgres
+  #   container_name: postgres
+  #   volumes:
+  #     - ./postgresql/data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   environment: 
+  #     POSTGRES_DB: blog
+  #     POSTGRES_USER: root 
+  #     POSTGRES_PASSWORD: password 
+
+  # Application Service
+  order_app:
+    container_name: order_app
+    build: 
+      context: ./php
+      dockerfile: Dockerfile
+    volumes:
+      - ./src:/var/www
+    ports:
+      - "9004:9000"
+    working_dir: /var/www
+    networks:
+      - ecommerce
+
+  #phpMyAdmin Service
+  order_phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: order_phpmyadmin
+    ports:
+      - "3401:80"
+    depends_on:
+      - order_db
+    networks:
+      - ecommerce
+
+  # pgadmin:
+  #   image: dpage/pgadmin4
+  #   container_name: pgAdmin
+  #   ports:
+  #     - "5050:80"
+  #   depends_on:
+  #     - db 
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: hanieasemi76@gmail.com
+  #     PGADMIN_DEFAULT_PASSWORD: password 
+
+
+networks:
+  ecommerce:
+    external: true
